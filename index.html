@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapa de Calor - Dinâmico</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyeljGisp0yk242H4s3VC_xFeBwESDrjU&libraries=visualization,places"></script>
+    <style>
+        #map { height: 500px; width: 100%; border-radius: 10px; }
+        .legenda { padding: 10px; background: white; margin-top: 10px; border: 1px solid #ccc; }
+        .cor { display: inline-block; width: 20px; height: 10px; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div class="legenda">
+        <strong>Status da Região:</strong><br>
+        <span class="cor" style="background: #00ff00;"></span> Verde: Ótima (> 30 abertos)<br>
+        <span class="cor" style="background: #ffff00;"></span> Amarelo: Média (15 a 30 abertos)<br>
+        <span class="cor" style="background: #ff0000;"></span> Vermelho: Baixa (< 15 abertos)
+    </div>
+
+    <script>
+        let map, service, heatmap;
+
+        function initMap() {
+            // Centraliza no ponto desejado (Ex: São Paulo)
+            const centro = { lat: -23.5505, lng: -46.6333 };
+            
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 15,
+                center: centro,
+            });
+
+            const request = {
+                location: centro,
+                radius: '2000', // Raio de 2km
+                type: ['restaurant'],
+                openNow: true // Filtro crucial: Apenas abertos agora
+            };
+
+            service = new google.maps.places.PlacesService(map);
+            
+            // Busca os estabelecimentos
+            service.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    const totalAbertos = results.length;
+                    console.log("Restaurantes abertos encontrados:", totalAbertos);
+
+                    // Converte resultados para pontos do mapa de calor
+                    const heatData = results.map(place => place.geometry.location);
+                    
+                    renderHeatmap(heatData, totalAbertos);
+                }
+            });
+        }
+
+        function renderHeatmap(points, total) {
+            let cores;
+
+            // Sua lógica de racional para as cores
+            if (total > 30) {
+                cores = ["rgba(0, 255, 0, 0)", "rgba(0, 255, 0, 1)"]; // Verde
+            } else if (total >= 15) {
+                cores = ["rgba(255, 255, 0, 0)", "rgba(255, 255, 0, 1)"]; // Amarelo
+            } else {
+                cores = ["rgba(255, 0, 0, 0)", "rgba(255, 0, 0, 1)"]; // Vermelho
+            }
+
+            heatmap = new google.maps.visualization.HeatmapLayer({
+                data: points,
+                map: map,
+                radius: 40,
+                gradient: cores
+            });
+        }
+
+        google.maps.event.addDomListener(window, 'load', initMap);
+    </script>
+</body>
+</html>
