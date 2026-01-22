@@ -1,56 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mapa de Calor - Dinâmico</title>
+    <title>Mapa de Calor Dinâmico - Restaurantes</title>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyeljGisp0yk242H4s3VC_xFeBwESDrjU&libraries=visualization,places"></script>
     <style>
-        #map { height: 500px; width: 100%; border-radius: 10px; }
-        .legenda { padding: 10px; background: white; margin-top: 10px; border: 1px solid #ccc; }
-        .cor { display: inline-block; width: 20px; height: 10px; margin-right: 5px; }
+        #map { height: 600px; width: 100%; border-radius: 10px; }
+        body { font-family: Arial, sans-serif; }
+        .painel { padding: 15px; background: #222; color: white; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="map"></div>
-
-    <div class="legenda">
-        <strong>Status da Região:</strong><br>
-        <span class="cor" style="background: #00ff00;"></span> Verde: Ótima (> 30 abertos)<br>
-        <span class="cor" style="background: #ffff00;"></span> Amarelo: Média (15 a 30 abertos)<br>
-        <span class="cor" style="background: #ff0000;"></span> Vermelho: Baixa (< 15 abertos)
+    <div class="painel">
+        <strong>Status: </strong> <span id="status">Carregando restaurantes...</span>
     </div>
+
+    <div id="map"></div>
 
     <script>
         let map, service, heatmap;
 
         function initMap() {
-            // Centraliza no ponto desejado (Ex: São Paulo)
-            const centro = { lat: -23.5505, lng: -46.6333 };
+            // Centraliza em São Paulo (Av. Paulista)
+            const centro = { lat: -23.5615, lng: -46.6623 };
             
             map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 15,
                 center: centro,
+                mapTypeId: 'roadmap'
             });
 
             const request = {
                 location: centro,
-                radius: '2000', // Raio de 2km
+                radius: '1500', // 1.5km
                 type: ['restaurant'],
-                openNow: true // Filtro crucial: Apenas abertos agora
+                openNow: true
             };
 
             service = new google.maps.places.PlacesService(map);
             
-            // Busca os estabelecimentos
             service.nearbySearch(request, (results, status) => {
+                const statusElement = document.getElementById("status");
+                
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     const totalAbertos = results.length;
-                    console.log("Restaurantes abertos encontrados:", totalAbertos);
+                    statusElement.innerHTML = `Sucesso! Encontrados ${totalAbertos} estabelecimentos abertos.`;
 
-                    // Converte resultados para pontos do mapa de calor
-                    const heatData = results.map(place => place.geometry.location);
+                    // Extrair coordenadas para o heatmap
+                    const heatData = results.map(place => {
+                        return place.geometry.location;
+                    });
                     
                     renderHeatmap(heatData, totalAbertos);
+                } else {
+                    statusElement.innerHTML = "Erro ao buscar dados: " + status;
                 }
             });
         }
@@ -58,24 +61,35 @@
         function renderHeatmap(points, total) {
             let cores;
 
-            // Sua lógica de racional para as cores
+            // Lógica de cores baseada na sua regra
             if (total > 30) {
-                cores = ["rgba(0, 255, 0, 0)", "rgba(0, 255, 0, 1)"]; // Verde
+                cores = [
+                    "rgba(0, 255, 0, 0)", 
+                    "rgba(0, 255, 0, 1)"  // VERDE
+                ];
             } else if (total >= 15) {
-                cores = ["rgba(255, 255, 0, 0)", "rgba(255, 255, 0, 1)"]; // Amarelo
+                cores = [
+                    "rgba(255, 255, 0, 0)", 
+                    "rgba(255, 255, 0, 1)"  // AMARELO
+                ];
             } else {
-                cores = ["rgba(255, 0, 0, 0)", "rgba(255, 0, 0, 1)"]; // Vermelho
+                cores = [
+                    "rgba(255, 0, 0, 0)", 
+                    "rgba(255, 0, 0, 1)"  // VERMELHO
+                ];
             }
 
             heatmap = new google.maps.visualization.HeatmapLayer({
                 data: points,
                 map: map,
-                radius: 40,
+                radius: 50, // Aumentei o raio para ficar mais visível
+                opacity: 0.8,
                 gradient: cores
             });
         }
 
-        google.maps.event.addDomListener(window, 'load', initMap);
+        // Inicia o mapa após o carregamento da página
+        window.onload = initMap;
     </script>
 </body>
 </html>
