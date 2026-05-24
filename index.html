@@ -1,95 +1,593 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <title>Mapa de Calor Dinâmico - Restaurantes</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyeljGisp0yk242H4s3VC_xFeBwESDrjU&libraries=visualization,places"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mega Jogo da Velha Premium</title>
     <style>
-        #map { height: 600px; width: 100%; border-radius: 10px; }
-        body { font-family: Arial, sans-serif; }
-        .painel { padding: 15px; background: #222; color: white; margin-bottom: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --primary: #2cb67d; 
+            --primary-dark: #1b8a5c;
+            --secondary: #7f5af0; 
+            --secondary-dark: #5b3db5;
+            --accent: #ff8906; 
+            --accent-dark: #d46b00;
+            --p1-color: #ef4565; 
+            --p1-dark: #c42b47;
+            --p2-color: #3da9fc; 
+            --p2-dark: #2071aa;
+            --bg-color: #f8f9fb;
+            --text-main: #2b2c34;
+            --text-light: #9fa1a6;
+            --white: #ffffff;
+            --slot-bg: #e2e8f0;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Nunito', sans-serif; 
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;   
+            -moz-user-select: none;      
+            -ms-user-select: none;       
+            user-select: none;           
+            -webkit-user-drag: none;     
+        }
+
+        input[type="text"] {
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+
+        body { 
+            background: linear-gradient(-45deg, #a0e1ff, #d4f0ff, #ffe3f1, #e3dcff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            height: 100vh;
+            height: 100dvh; 
+            overflow: hidden; 
+            overscroll-behavior: none; 
+        }
+
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        #app-container { 
+            width: 100%; 
+            max-width: 600px; 
+            height: 100%;
+            max-height: 95vh;
+            background: rgba(255, 255, 255, 0.95); 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 0 40px rgba(0,0,0,0.15); 
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .hidden { display: none !important; }
+        
+        #screens-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen { 
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 15px; 
+            text-align: center; 
+            overflow-y: auto;
+        }
+
+        h1 { font-size: 2.8rem; color: var(--secondary); margin-bottom: 10px; line-height: 1.2; text-shadow: 2px 2px 0px rgba(0,0,0,0.05); }
+        h2 { font-size: 2rem; color: var(--text-main); margin-bottom: 20px; }
+        .subtitle { font-size: 1.3rem; color: var(--text-light); margin-bottom: 20px; font-weight: 700; }
+
+        input[type="text"] { width: 90%; max-width: 250px; padding: 15px; border: 4px solid var(--slot-bg); border-radius: 15px; font-size: 1.2rem; text-align: center; outline: none; font-weight: 900; color: var(--text-main); transition: border-color 0.3s; }
+        input[type="text"]:focus { border-color: var(--secondary); }
+        
+        .player-setup-card { background: white; border: 4px solid var(--slot-bg); padding: 15px; border-radius: 20px; width: 100%; max-width: 350px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .player-setup-card.p1 { border-color: #ffb3c1; background: #fff0f3; }
+        .player-setup-card.p2 { border-color: #b3e0ff; background: #f0f8ff; }
+
+        button { cursor: pointer; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); outline: none; border-radius: 20px; }
+        button:active { transform: translateY(6px) !important; box-shadow: none !important; }
+
+        .btn-primary { background: var(--accent); color: white; border: none; box-shadow: 0 6px 0 var(--accent-dark); padding: 18px 30px; font-size: 1.3rem; width: 80%; max-width: 300px; margin: 10px 0; }
+        .btn-secondary { background: var(--white); color: var(--secondary); border: 3px solid var(--slot-bg); box-shadow: 0 6px 0 var(--slot-bg); padding: 15px 30px; font-size: 1.2rem; width: 80%; max-width: 300px; margin: 10px 0; }
+        
+        @media (hover: hover) {
+            button.btn-primary:hover { filter: brightness(1.1); transform: translateY(-3px); }
+            button.btn-secondary:hover { background: #f3f0ff; transform: translateY(-3px); color: var(--secondary-dark); border-color: #cbd5e1; }
+            .ttt-cell:hover:not(.filled) { transform: scale(1.05); background: #f1f5f9; border-color: var(--secondary); }
+        }
+
+        .game-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px; }
+        
+        .score-board { display: flex; flex-direction: column; align-items: center; background: white; border: 3px solid var(--slot-bg); padding: 8px; border-radius: 15px; font-weight: 900; box-shadow: 0 4px 0 var(--slot-bg); width: 45%; max-width: 200px; }
+        .score-board.active { border-color: var(--accent); box-shadow: 0 4px 0 var(--accent-dark); transform: scale(1.05); }
+        
+        .score-p1, .score-p2 { 
+            color: var(--p1-color); 
+            display: block; 
+            width: 100%; 
+            white-space: normal; 
+            word-wrap: break-word; 
+            line-height: 1.1;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .score-p2 { color: var(--p2-color); }
+        
+        .points-display { font-size: 1.6rem; margin-top: 5px; }
+
+        /* Ajuste do Indicador de Turno: Removido o corte (ellipsis) e adicionado espaço seguro */
+        .turn-indicator { 
+            font-size: 1.1rem; 
+            font-weight: 900; 
+            margin-bottom: 10px; 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            background: var(--slot-bg); 
+            color: var(--text-main); 
+            transition: all 0.3s; 
+            width: 95%; 
+            max-width: 450px;
+            text-align: center;
+            word-wrap: break-word; /* Permite quebrar linha se o nome for gigante */
+        }
+
+        .board-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; width: 100%; max-width: 450px; background: var(--slot-bg); padding: 8px; border-radius: 15px; box-shadow: inset 0 4px 8px rgba(0,0,0,0.1); }
+        
+        .ttt-cell { width: 100%; aspect-ratio: 1/1; background: var(--white); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 900; cursor: pointer; box-shadow: 0 3px 0 #cbd5e1; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); border: 2px solid transparent; }
+        .ttt-cell:active:not(.filled) { transform: translateY(3px) scale(0.95); box-shadow: 0 0 0 transparent; }
+        
+        .ttt-cell.filled.p1 { color: var(--p1-color); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .ttt-cell.filled.p2 { color: var(--p2-color); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .ttt-cell.locked { opacity: 0.4; filter: grayscale(100%); transform: scale(0.9); box-shadow: none; border: 2px dashed #cbd5e1; }
+        .ttt-cell.scored { animation: flashScore 0.8s ease; z-index: 10; border-color: var(--accent); }
+
+        #bottom-bar { width: 100%; padding: 10px; background: rgba(255, 255, 255, 0.95); border-top: 4px solid var(--slot-bg); display: flex; justify-content: center; z-index: 100; }
+        #btn-back-global { margin: 0; width: 90%; max-width: 300px; padding: 12px; font-size: 1.1rem; }
+
+        @keyframes popIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+        @keyframes flashScore { 0%, 100% { transform: scale(1); background: white; } 50% { transform: scale(1.1); background: #ffde8a; box-shadow: 0 0 15px #ff8906; } }
+        
+        #confetti-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; overflow: hidden; }
+        .confetti { position: absolute; width: 12px; height: 26px; border-radius: 4px; top: -30px; opacity: 1; animation: fall linear forwards; }
+        @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+        .particle { position: absolute; width: 15px; height: 15px; background: gold; border-radius: 50%; pointer-events: none; z-index: 50; animation: starBlast 0.6s ease-out forwards; }
+        @keyframes starBlast { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+
+        @media (max-width: 600px) {
+            #app-container { max-height: none; height: 100dvh; border-radius: 0; }
+            .screen { padding: 10px; justify-content: center; } 
+            
+            .game-header { margin-top: 5px; margin-bottom: 5px; }
+            .score-board { padding: 5px; width: 48%; }
+            .score-p1, .score-p2 { font-size: 0.95rem; }
+            .points-display { font-size: 1.4rem; margin-top: 2px; }
+
+            .turn-indicator { font-size: 1rem; padding: 6px 15px; margin-bottom: 10px; width: 100%; }
+
+            .board-container { gap: 3px; padding: 5px; margin-bottom: 10px; }
+            .ttt-cell { font-size: 1.8rem; border-radius: 6px; box-shadow: 0 2px 0 #cbd5e1; }
+            
+            #bottom-bar { padding: 8px; }
+            #btn-back-global { padding: 10px; font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
+    <div id="confetti-container"></div>
 
-    <div class="painel">
-        <strong>Status: </strong> <span id="status">Carregando restaurantes...</span>
-    </div>
+    <main id="app-container">
+        <div id="screens-wrapper">
+            
+            <section id="screen-login" class="screen active" style="justify-content: center;">
+                <h1 style="animation: bounceIn 0.8s; font-size: 2.2rem;">Batalha 6x6 ⚔️</h1>
+                <p class="subtitle" style="margin-bottom: 15px;">Quem vai jogar?</p>
+                
+                <div class="player-setup-card p1">
+                    <h3 style="color: var(--p1-dark);">Jogador 1 (❌)</h3>
+                    <input type="text" id="p1-name" placeholder="Nome do Jogador 1" autocomplete="off" maxlength="12">
+                </div>
 
-    <div id="map"></div>
+                <div class="player-setup-card p2">
+                    <h3 style="color: var(--p2-dark);">Jogador 2 (⭕)</h3>
+                    <input type="text" id="p2-name" placeholder="Nome do Jogador 2" autocomplete="off" maxlength="12">
+                </div>
+
+                <button id="btn-start-game" class="btn-primary btn-huge" style="margin-top: 10px;">INICIAR DUELO!</button>
+            </section>
+
+            <section id="screen-game" class="screen hidden">
+                
+                <div class="game-header">
+                    <div id="score-card-p1" class="score-board active">
+                        <span id="display-p1-name" class="score-p1">Jog 1</span>
+                        <div class="points-display">⭐ <span id="p1-score">0</span></div>
+                    </div>
+                    <h2 style="margin: 0 5px; color: var(--slot-bg); font-size: 1.2rem;">VS</h2>
+                    <div id="score-card-p2" class="score-board">
+                        <span id="display-p2-name" class="score-p2">Jog 2</span>
+                        <div class="points-display">⭐ <span id="p2-score">0</span></div>
+                    </div>
+                </div>
+
+                <div id="turn-display" class="turn-indicator">Vez de: Jogador 1 (❌)</div>
+
+                <div class="board-container" id="board"></div>
+                
+                </section>
+
+            <section id="screen-results" class="screen hidden" style="justify-content: center;">
+                <h1 style="font-size: 3.5rem; animation: popIn 0.8s;">Fim de Jogo! 🎉</h1>
+                <div style="font-size: 6rem; margin: 10px 0;" id="winner-emoji">🏆</div>
+                <h2 id="winner-text" style="font-size: 2.2rem; margin: 15px 0; color: var(--success-dark); font-weight: 900; text-transform: uppercase;">EMPATE!</h2>
+                
+                <div style="display: flex; gap: 20px; font-size: 1.5rem; font-weight: 900; margin-bottom: 20px;">
+                    <span style="color: var(--p1-color);" id="final-score-p1">❌ 0</span>
+                    <span> - </span>
+                    <span style="color: var(--p2-color);" id="final-score-p2">⭕ 0</span>
+                </div>
+
+                <button id="btn-rematch" class="btn-primary btn-huge">Revanche 🔄</button>
+                <button id="btn-new-players" class="btn-secondary" style="margin-top: 15px;">Trocar Jogadores</button>
+            </section>
+
+        </div>
+
+        <div id="bottom-bar" class="hidden">
+            <button id="btn-back-global" class="btn-secondary">⬅️ ABANDONAR PARTIDA</button>
+        </div>
+
+    </main>
 
     <script>
-        let map, service, heatmap;
+        const AUDIO_CONFIG = {
+            click: { urls: ["https://www.myinstants.com/media/sounds/click.mp3", "https://actions.google.com/sounds/v1/ui/button_click.ogg"], volume: 0.5 },
+            point: { urls: ["https://www.myinstants.com/media/sounds/olokinho-meu-20939.mp3", "https://www.myinstants.com/media/sounds/olokinho-meu.mp3"], volume: 0.5 },
+            win: { urls: ["https://www.myinstants.com/media/sounds/salma-de-palmas-54653.mp3"], volume: 0.8 }
+        };
 
-        function initMap() {
-            // Centraliza em São Paulo (Av. Paulista)
-            const centro = { lat: -23.5615, lng: -46.6623 };
-            
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 15,
-                center: centro,
-                mapTypeId: 'roadmap'
-            });
-
-            const request = {
-                location: centro,
-                radius: '1500', // 1.5km
-                type: ['restaurant'],
-                openNow: true
-            };
-
-            service = new google.maps.places.PlacesService(map);
-            
-            service.nearbySearch(request, (results, status) => {
-                const statusElement = document.getElementById("status");
-                
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    const totalAbertos = results.length;
-                    statusElement.innerHTML = `Sucesso! Encontrados ${totalAbertos} estabelecimentos abertos.`;
-
-                    // Extrair coordenadas para o heatmap
-                    const heatData = results.map(place => {
-                        return place.geometry.location;
-                    });
-                    
-                    renderHeatmap(heatData, totalAbertos);
-                } else {
-                    statusElement.innerHTML = "Erro ao buscar dados: " + status;
+        const AudioEngine = {
+            players: {},
+            unlocked: false,
+            init() {
+                for (let key in AUDIO_CONFIG) {
+                    let audioEl = new Audio();
+                    audioEl.src = AUDIO_CONFIG[key].urls[0];
+                    audioEl.volume = AUDIO_CONFIG[key].volume;
+                    audioEl.preload = 'auto';
+                    this.players[key] = audioEl;
                 }
-            });
-        }
-
-        function renderHeatmap(points, total) {
-            let cores;
-
-            // Lógica de cores baseada na sua regra
-            if (total > 30) {
-                cores = [
-                    "rgba(0, 255, 0, 0)", 
-                    "rgba(0, 255, 0, 1)"  // VERDE
-                ];
-            } else if (total >= 15) {
-                cores = [
-                    "rgba(255, 255, 0, 0)", 
-                    "rgba(255, 255, 0, 1)"  // AMARELO
-                ];
-            } else {
-                cores = [
-                    "rgba(255, 0, 0, 0)", 
-                    "rgba(255, 0, 0, 1)"  // VERMELHO
-                ];
+            },
+            unlock() {
+                if(this.unlocked) return;
+                for (let key in this.players) {
+                    let a = this.players[key];
+                    a.volume = 0;
+                    let p = a.play();
+                    if(p !== undefined) p.then(() => { a.pause(); a.currentTime = 0; a.volume = AUDIO_CONFIG[key].volume; }).catch(()=>{});
+                }
+                const u = new SpeechSynthesisUtterance(""); u.volume = 0; window.speechSynthesis.speak(u);
+                this.unlocked = true;
+            },
+            play(key) {
+                if (!this.players[key]) return;
+                let snd = this.players[key];
+                snd.currentTime = 0; 
+                let p = snd.play();
+                if(p !== undefined) p.catch(()=>{});
+            },
+            speak(text) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'pt-BR'; u.volume = 1.0; u.pitch = 1.2; u.rate = 1.1;
+                window.speechSynthesis.speak(u);
             }
+        };
 
-            heatmap = new google.maps.visualization.HeatmapLayer({
-                data: points,
-                map: map,
-                radius: 50, // Aumentei o raio para ficar mais visível
-                opacity: 0.8,
-                gradient: cores
-            });
-        }
+        const GameEngine = {
+            size: 6,
+            board: [],
+            locked: [],
+            players: {
+                p1: { id: 'p1', symbol: '❌', name: 'Jogador 1', score: 0, color: '#ef4565' },
+                p2: { id: 'p2', symbol: '⭕', name: 'Jogador 2', score: 0, color: '#3da9fc' }
+            },
+            currentPlayerId: 'p1',
+            targetScore: 5,
+            isProcessing: false,
 
-        // Inicia o mapa após o carregamento da página
-        window.onload = initMap;
+            init() {
+                AudioEngine.init();
+                this.setupUI();
+                UIController.showScreen('screen-login');
+            },
+
+            setupUI() {
+                document.body.addEventListener('click', () => { AudioEngine.unlock(); }, {once:true});
+
+                document.getElementById('btn-start-game').addEventListener('click', () => {
+                    let n1 = document.getElementById('p1-name').value.trim();
+                    let n2 = document.getElementById('p2-name').value.trim();
+                    this.players.p1.name = n1 || 'Jogador 1';
+                    this.players.p2.name = n2 || 'Jogador 2';
+                    
+                    document.getElementById('display-p1-name').innerText = this.players.p1.name;
+                    document.getElementById('display-p2-name').innerText = this.players.p2.name;
+
+                    this.startGame();
+                });
+
+                document.getElementById('btn-rematch').addEventListener('click', () => this.startGame());
+                
+                document.getElementById('btn-new-players').addEventListener('click', () => {
+                    UIController.clearConfetti();
+                    UIController.showScreen('screen-login');
+                });
+
+                document.getElementById('btn-back-global').addEventListener('click', () => {
+                    if(confirm("Tem certeza que deseja abandonar a partida?")) {
+                        UIController.showScreen('screen-login');
+                    }
+                });
+            },
+
+            startGame() {
+                UIController.clearConfetti();
+                this.board = Array(this.size * this.size).fill(null);
+                this.locked = Array(this.size * this.size).fill(false);
+                this.players.p1.score = 0;
+                this.players.p2.score = 0;
+                this.currentPlayerId = 'p1';
+                this.isProcessing = false;
+                
+                UIController.updateScores(0, 0);
+                this.renderBoard();
+                this.updateTurnUI();
+                UIController.showScreen('screen-game');
+            },
+
+            renderBoard() {
+                const boardEl = document.getElementById('board');
+                boardEl.innerHTML = '';
+                for (let i = 0; i < 36; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'ttt-cell';
+                    cell.dataset.index = i;
+                    cell.oncontextmenu = () => false;
+                    
+                    cell.addEventListener('click', () => this.handleCellClick(i));
+                    boardEl.appendChild(cell);
+                }
+            },
+
+            handleCellClick(index) {
+                if (this.isProcessing || this.board[index] !== null) return;
+                
+                this.board[index] = this.currentPlayerId;
+                const cellEl = document.querySelector(`.ttt-cell[data-index="${index}"]`);
+                cellEl.innerText = this.players[this.currentPlayerId].symbol;
+                cellEl.classList.add('filled', this.currentPlayerId);
+                
+                AudioEngine.play('click');
+                this.isProcessing = true; 
+
+                const matches = this.checkMatchesAt(index, this.currentPlayerId);
+                
+                if (matches.length > 0) {
+                    this.processMatches(matches);
+                } else {
+                    this.finishTurn();
+                }
+            },
+
+            checkMatchesAt(index, playerId) {
+                const x = index % this.size;
+                const y = Math.floor(index / this.size);
+                const directions = [ [1,0], [0,1], [1,1], [1,-1] ];
+                let validLines = [];
+
+                directions.forEach(dir => {
+                    let dx = dir[0], dy = dir[1];
+                    let line = [index];
+
+                    for (let step = 1; step <= 2; step++) {
+                        let nx = x + dx * step, ny = y + dy * step;
+                        if (nx >= 0 && nx < this.size && ny >= 0 && ny < this.size) {
+                            let nIdx = ny * this.size + nx;
+                            if (this.board[nIdx] === playerId && !this.locked[nIdx]) line.push(nIdx);
+                            else break;
+                        } else break;
+                    }
+
+                    for (let step = 1; step <= 2; step++) {
+                        let nx = x - dx * step, ny = y - dy * step;
+                        if (nx >= 0 && nx < this.size && ny >= 0 && ny < this.size) {
+                            let nIdx = ny * this.size + nx;
+                            if (this.board[nIdx] === playerId && !this.locked[nIdx]) line.unshift(nIdx);
+                            else break;
+                        } else break;
+                    }
+
+                    if (line.length >= 3) {
+                        validLines.push(line);
+                    }
+                });
+
+                return validLines;
+            },
+
+            processMatches(matches) {
+                AudioEngine.play('point');
+                let pointsGained = matches.length;
+                this.players[this.currentPlayerId].score += pointsGained;
+                
+                matches.forEach(line => {
+                    line.forEach(idx => {
+                        this.locked[idx] = true;
+                        const el = document.querySelector(`.ttt-cell[data-index="${idx}"]`);
+                        el.classList.add('scored');
+                        UIController.createParticles(el);
+                        setTimeout(() => {
+                            el.classList.remove('scored');
+                            el.classList.add('locked');
+                        }, 1000);
+                    });
+                });
+
+                UIController.updateScores(this.players.p1.score, this.players.p2.score);
+
+                setTimeout(() => {
+                    if (this.players[this.currentPlayerId].score >= this.targetScore) {
+                        this.endGame(this.currentPlayerId);
+                    } else if (this.isBoardFull()) {
+                        this.endGame('tie');
+                    } else {
+                        this.finishTurn();
+                    }
+                }, 1000);
+            },
+
+            finishTurn() {
+                if(this.isBoardFull()) {
+                    this.endGame('tie');
+                    return;
+                }
+                this.currentPlayerId = this.currentPlayerId === 'p1' ? 'p2' : 'p1';
+                this.updateTurnUI();
+                this.isProcessing = false;
+            },
+
+            isBoardFull() {
+                return !this.board.includes(null);
+            },
+
+            updateTurnUI() {
+                const turnEl = document.getElementById('turn-display');
+                const p = this.players[this.currentPlayerId];
+                turnEl.innerText = `Vez de: ${p.name} (${p.symbol})`;
+                turnEl.style.color = 'white';
+                turnEl.style.backgroundColor = p.color;
+
+                document.getElementById('score-card-p1').classList.toggle('active', this.currentPlayerId === 'p1');
+                document.getElementById('score-card-p2').classList.toggle('active', this.currentPlayerId === 'p2');
+            },
+
+            endGame(winnerId) {
+                AudioEngine.play('win');
+                UIController.triggerConfetti();
+
+                const winnerText = document.getElementById('winner-text');
+                const winnerEmoji = document.getElementById('winner-emoji');
+
+                if (winnerId === 'tie') {
+                    if (this.players.p1.score > this.players.p2.score) winnerId = 'p1';
+                    else if (this.players.p2.score > this.players.p1.score) winnerId = 'p2';
+                }
+
+                if (winnerId === 'tie') {
+                    winnerText.innerText = "Deu Empate!";
+                    winnerText.style.color = "var(--text-main)";
+                    winnerEmoji.innerText = "🤝";
+                    AudioEngine.speak("O jogo terminou empatado!");
+                } else {
+                    const w = this.players[winnerId];
+                    winnerText.innerText = `${w.name} Venceu!`;
+                    winnerText.style.color = w.color;
+                    winnerEmoji.innerText = w.symbol;
+                    AudioEngine.speak(`Parabéns ${w.name}, você venceu a partida!`);
+                }
+
+                document.getElementById('final-score-p1').innerText = `❌ ${this.players.p1.score}`;
+                document.getElementById('final-score-p2').innerText = `⭕ ${this.players.p2.score}`;
+
+                setTimeout(() => {
+                    UIController.showScreen('screen-results');
+                }, 500);
+            }
+        };
+
+        const UIController = {
+            screens: ['screen-login', 'screen-game', 'screen-results'],
+            
+            showScreen(screenId) {
+                this.screens.forEach(id => { 
+                    document.getElementById(id).classList.add('hidden'); 
+                    document.getElementById(id).classList.remove('active'); 
+                });
+                document.getElementById(screenId).classList.remove('hidden'); 
+                document.getElementById(screenId).classList.add('active');
+                
+                if(screenId === 'screen-login') { 
+                    document.getElementById('bottom-bar').classList.add('hidden'); 
+                } else { 
+                    document.getElementById('bottom-bar').classList.remove('hidden'); 
+                }
+            },
+
+            updateScores(s1, s2) {
+                document.getElementById('p1-score').innerText = s1;
+                document.getElementById('p2-score').innerText = s2;
+            },
+
+            createParticles(element) {
+                const rect = element.getBoundingClientRect();
+                for(let i=0; i<8; i++) {
+                    const p = document.createElement('div'); p.className = 'particle';
+                    p.style.left = `${rect.left + rect.width/2}px`; p.style.top = `${rect.top + rect.height/2}px`; 
+                    p.style.setProperty('--dx', `${(Math.random() - 0.5) * 150}px`); 
+                    p.style.setProperty('--dy', `${(Math.random() - 0.5) * 150}px`);
+                    document.body.appendChild(p); 
+                    setTimeout(() => p.remove(), 600);
+                }
+            },
+            
+            clearConfetti() {
+                document.getElementById('confetti-container').innerHTML = '';
+            },
+
+            triggerConfetti() {
+                this.clearConfetti();
+                const container = document.getElementById('confetti-container'); 
+                const colors = ['#3da9fc', '#ef4565', '#2cb67d', '#ff8906', '#ffd800'];
+                
+                for (let i = 0; i < 50; i++) {
+                    const conf = document.createElement('div'); 
+                    conf.className = 'confetti'; 
+                    conf.style.left = Math.random() * 100 + 'vw'; 
+                    conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; 
+                    const duration = Math.random() * 2 + 2; 
+                    const delay = Math.random() * 0.5; 
+                    conf.style.animationDuration = `${duration}s`;
+                    conf.style.animationDelay = `${delay}s`;
+                    container.appendChild(conf);
+                }
+            }
+        };
+
+        window.onload = () => { GameEngine.init(); };
     </script>
 </body>
 </html>
